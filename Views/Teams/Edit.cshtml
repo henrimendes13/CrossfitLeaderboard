@@ -31,6 +31,15 @@
                             <div class="form-text">Digite um nome único para a equipe.</div>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label fw-bold">Categoria</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                                <option value="">Selecione uma categoria...</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            <div class="form-text">Selecione a categoria à qual esta equipe pertence.</div>
+                        </div>
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i>
                             <strong>Total de Pontos:</strong> @Model.TotalPoints pontos

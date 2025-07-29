@@ -10,13 +10,27 @@ namespace CrossfitLeaderboard.Data
         {
         }
 
+        public DbSet<Category> Categories { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Workout> Workouts { get; set; }
         public DbSet<WorkoutResult> WorkoutResults { get; set; }
+        public DbSet<WorkoutCategory> WorkoutCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configuração da Category
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500).IsRequired(false);
+                
+                // Índices
+                entity.HasIndex(e => e.Name).IsUnique();
+            });
 
             // Configuração do Team
             modelBuilder.Entity<Team>(entity =>
@@ -25,9 +39,16 @@ namespace CrossfitLeaderboard.Data
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.TotalPoints).HasDefaultValue(0);
+                entity.Property(e => e.CategoryId).IsRequired(false);
+
+                // Relacionamento com Category
+                entity.HasOne(e => e.Category)
+                    .WithMany(c => c.Teams)
+                    .HasForeignKey(e => e.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
                 
                 // Índices
-                entity.HasIndex(e => e.Name).IsUnique();
+                entity.HasIndex(e => new { e.Name, e.CategoryId }).IsUnique();
             });
 
             // Configuração do Workout
@@ -36,12 +57,28 @@ namespace CrossfitLeaderboard.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.Description).IsRequired(false).HasMaxLength(500);
                 entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Type).IsRequired();
                 
                 // Índices
                 entity.HasIndex(e => e.Name).IsUnique();
+            });
+
+            // Configuração do WorkoutCategory (many-to-many)
+            modelBuilder.Entity<WorkoutCategory>(entity =>
+            {
+                entity.HasKey(e => new { e.WorkoutId, e.CategoryId });
+
+                entity.HasOne(e => e.Workout)
+                    .WithMany(w => w.WorkoutCategories)
+                    .HasForeignKey(e => e.WorkoutId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Category)
+                    .WithMany(c => c.WorkoutCategories)
+                    .HasForeignKey(e => e.CategoryId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Configuração do WorkoutResult

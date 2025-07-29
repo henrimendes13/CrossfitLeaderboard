@@ -22,13 +22,40 @@ namespace CrossfitLeaderboard.Services
             _context = context;
         }
 
-        public async Task<LeaderboardViewModel> GetLeaderboardAsync()
+        public async Task<LeaderboardViewModel> GetLeaderboardAsync(int? categoryId = null)
         {
-            var teams = await _teamService.GetAllTeamsAsync();
-            var workouts = await _workoutService.GetAllWorkoutsAsync();
+            IQueryable<Team> teamsQuery;
+            IQueryable<Workout> workoutsQuery;
+            
+            if (categoryId.HasValue)
+            {
+                // Filtrar por categoria específica
+                teamsQuery = _context.Teams
+                    .Include(t => t.Category)
+                    .Where(t => t.CategoryId == categoryId);
+                
+                workoutsQuery = _context.Workouts
+                    .Include(w => w.WorkoutCategories)
+                    .Where(w => w.WorkoutCategories.Any(wc => wc.CategoryId == categoryId));
+            }
+            else
+            {
+                // Buscar todos os times e workouts
+                teamsQuery = _context.Teams.Include(t => t.Category);
+                workoutsQuery = _context.Workouts.Include(w => w.WorkoutCategories);
+            }
+            
+            var teams = await teamsQuery.ToListAsync();
+            var workouts = await workoutsQuery.ToListAsync();
+            
+            // Buscar resultados apenas para os times e workouts filtrados
+            var teamIds = teams.Select(t => t.Id).ToList();
+            var workoutIds = workouts.Select(w => w.Id).ToList();
+            
             var results = await _context.WorkoutResults
                 .Include(r => r.Team)
                 .Include(r => r.Workout)
+                .Where(r => teamIds.Contains(r.TeamId) && workoutIds.Contains(r.WorkoutId))
                 .ToListAsync();
 
             var viewModel = new LeaderboardViewModel

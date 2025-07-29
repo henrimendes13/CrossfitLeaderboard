@@ -1,0 +1,110 @@
+@model CrossfitLeaderboard.Entities.Category
+
+@{
+    ViewData["Title"] = "Excluir Categoria";
+}
+
+<!-- Menu Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link active" href="/Categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <a class="nav-link" href="/Teams">
+                <i class="fas fa-users"></i> Teams
+            </a>
+            <a class="nav-link" href="/Workouts">
+                <i class="fas fa-dumbbell"></i> Workouts
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-danger">🗑️ Excluir Categoria</h1>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">⚠️ Atenção!</h4>
+                <p>Tem certeza que deseja excluir a categoria <strong>"@Model.Name"</strong>?</p>
+                <hr>
+                <p class="mb-0">Esta ação não pode ser desfeita.</p>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirmar Exclusão</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Nome:</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
+
+                        <dt class="col-sm-3">Descrição:</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+
+                        <dt class="col-sm-3">Times Vinculados:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.Teams.Any())
+                            {
+                                <span class="badge bg-danger">@Model.Teams.Count times</span>
+                                <small class="text-muted d-block">Não será possível excluir se houver times vinculados.</small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Nenhum time vinculado</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Workouts Vinculados:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.WorkoutCategories.Any())
+                            {
+                                <span class="badge bg-warning text-dark">@Model.WorkoutCategories.Count workouts</span>
+                                <small class="text-muted d-block">Não será possível excluir se houver workouts vinculados.</small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Nenhum workout vinculado</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    @if (Model.Teams.Any() || Model.WorkoutCategories.Any())
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Não é possível excluir esta categoria</strong> pois existem times ou workouts vinculados a ela.
+                            <br>Primeiro remova todos os vínculos antes de tentar excluir.
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="Delete">
+                            <input type="hidden" asp-for="Id" />
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Confirmar Exclusão
+                                </button>
+                                <a asp-action="Index" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

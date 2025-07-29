@@ -12,7 +12,11 @@ namespace CrossfitLeaderboard.Entities
         
         public int TotalPoints { get; set; }
         
-        // Navigation property
+        // Foreign key para Category
+        public int? CategoryId { get; set; }
+        
+        // Navigation properties
+        public virtual Category? Category { get; set; }
         public virtual ICollection<WorkoutResult> WorkoutResults { get; set; } = new List<WorkoutResult>();
     }
 } 

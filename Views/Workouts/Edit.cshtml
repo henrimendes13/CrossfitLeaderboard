@@ -1,3 +1,4 @@
+@using CrossfitLeaderboard.Entities
 @model CrossfitLeaderboard.Entities.Workout
 
 @{
@@ -62,6 +63,43 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Categorias</label>
+                            <div class="form-text mb-2">Selecione as categorias para as quais este workout será aplicado:</div>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllCategories()">
+                                        <i class="fas fa-check-square"></i> Selecionar Todos
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllCategories()">
+                                        <i class="fas fa-square"></i> Desmarcar Todos
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                @foreach (var category in ViewBag.Categories)
+                                {
+                                    var isSelected = ViewBag.SelectedCategories.Contains(category.Id);
+                                    <div class="col-md-6 col-lg-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input category-checkbox" type="checkbox" 
+                                                   name="categoryIds" value="@category.Id" id="category_@category.Id"
+                                                   @(isSelected ? "checked" : "")>
+                                            <label class="form-check-label" for="category_@category.Id">
+                                                <strong>@category.Name</strong>
+                                                @if (!string.IsNullOrEmpty(category.Description))
+                                                {
+                                                    <br><small class="text-muted">@category.Description</small>
+                                                }
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i>
                             <strong>Nota:</strong> Alterações no tipo de workout podem afetar o cálculo das posições dos resultados existentes.
@@ -84,4 +122,18 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function selectAllCategories() {
+            document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+        
+        function deselectAllCategories() {
+            document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+    </script>
 } 

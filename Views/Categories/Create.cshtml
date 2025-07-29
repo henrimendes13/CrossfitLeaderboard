@@ -1,0 +1,112 @@
+@model CrossfitLeaderboard.Entities.Category
+
+@{
+    ViewData["Title"] = "Nova Categoria";
+}
+
+<!-- Menu Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link active" href="/Categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <a class="nav-link" href="/Teams">
+                <i class="fas fa-users"></i> Teams
+            </a>
+            <a class="nav-link" href="/Workouts">
+                <i class="fas fa-dumbbell"></i> Workouts
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-primary">🏷️ Nova Categoria</h1>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Cadastrar Nova Categoria</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Nome da Categoria</label>
+                            <input asp-for="Name" class="form-control" placeholder="Ex: RX Masculino Individual" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">Digite um nome único para a categoria (ex: RX Masculino, Scale Feminino, Intermediário).</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Descrição</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Ex: Categoria para atletas masculinos que fazem os movimentos conforme prescrito"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Descreva as características desta categoria para facilitar a identificação.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar Categoria
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">💡 Exemplos de Categorias</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>RX Masculino Individual</strong> - Atletas masculinos que fazem os movimentos conforme prescrito</li>
+                                <li><strong>RX Feminino Individual</strong> - Atletas femininas que fazem os movimentos conforme prescrito</li>
+                                <li><strong>Scale Masculino Individual</strong> - Atletas masculinos com adaptações nos movimentos</li>
+                                <li><strong>Scale Feminino Individual</strong> - Atletas femininas com adaptações nos movimentos</li>
+                                <li><strong>RX Dupla Mista</strong> - Duplas com um homem e uma mulher</li>
+                                <li><strong>RX Trio</strong> - Times com três atletas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">📋 Instruções</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>Crie categorias que façam sentido para sua competição</li>
+                                <li>Considere fatores como gênero, nível técnico e tamanho do time</li>
+                                <li>Use nomes claros e descritivos</li>
+                                <li>Depois de criar categorias, você poderá criar times e workouts</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

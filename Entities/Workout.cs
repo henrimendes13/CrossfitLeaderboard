@@ -18,6 +18,9 @@ namespace CrossfitLeaderboard.Entities
         [Required]
         [MaxLength(20)]
         public string Unit { get; set; } = string.Empty;
+        
+        // Navigation property para many-to-many com Category
+        public virtual ICollection<WorkoutCategory> WorkoutCategories { get; set; } = new List<WorkoutCategory>();
     }
 
     public enum WorkoutType

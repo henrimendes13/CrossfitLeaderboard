@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using CrossfitLeaderboard.Models;
 using CrossfitLeaderboard.Services;
+using CrossfitLeaderboard.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrossfitLeaderboard.Controllers
 {
@@ -9,16 +11,22 @@ namespace CrossfitLeaderboard.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly LeaderboardService _leaderboardService;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, LeaderboardService leaderboardService)
+        public HomeController(ILogger<HomeController> logger, LeaderboardService leaderboardService, ApplicationDbContext context)
         {
             _logger = logger;
             _leaderboardService = leaderboardService;
+            _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? categoryId = null)
         {
-            var leaderboard = await _leaderboardService.GetLeaderboardAsync();
+            var leaderboard = await _leaderboardService.GetLeaderboardAsync(categoryId);
+            var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            
+            ViewBag.CategoryId = categoryId;
+            ViewBag.Categories = categories;
             return View(leaderboard);
         }
 

@@ -1,3 +1,4 @@
+@using CrossfitLeaderboard.Entities
 @model CrossfitLeaderboard.Entities.Workout
 
 @{
@@ -61,6 +62,51 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Categorias</label>
+                            <div class="form-text mb-2">Selecione as categorias para as quais este workout será aplicado:</div>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllCategories()">
+                                        <i class="fas fa-check-square"></i> Selecionar Todos
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllCategories()">
+                                        <i class="fas fa-square"></i> Desmarcar Todos
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                @foreach (var category in ViewBag.Categories)
+                                {
+                                    <div class="col-md-6 col-lg-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input category-checkbox" type="checkbox" 
+                                                   name="categoryIds" value="@category.Id" id="category_@category.Id">
+                                            <label class="form-check-label" for="category_@category.Id">
+                                                <strong>@category.Name</strong>
+                                                @if (!string.IsNullOrEmpty(category.Description))
+                                                {
+                                                    <br><small class="text-muted">@category.Description</small>
+                                                }
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            
+                            @if (ViewBag.Categories == null || ((List<Category>)ViewBag.Categories).Count == 0)
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Nenhuma categoria encontrada!</strong>
+                                    <br>Você precisa criar categorias antes de criar workouts.
+                                    <br><a href="/Categories" class="btn btn-sm btn-primary mt-2">Criar Categorias</a>
+                                </div>
+                            }
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-save"></i> Salvar Workout
@@ -78,4 +124,18 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function selectAllCategories() {
+            document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+        
+        function deselectAllCategories() {
+            document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+    </script>
 } 

@@ -4,35 +4,71 @@
     ViewData["Title"] = "CrossFit Leaderboard";
 }
 
+<!-- Menu Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link active" href="/">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link" href="/Categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <a class="nav-link" href="/Teams">
+                <i class="fas fa-users"></i> Teams
+            </a>
+            <a class="nav-link" href="/Workouts">
+                <i class="fas fa-dumbbell"></i> Workouts
+            </a>
+        </div>
+    </div>
+</nav>
+
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="display-4 text-primary">🏆 CrossFit Leaderboard</h1>
-                <button id="resetBtn" class="btn btn-warning">
-                    <i class="fas fa-redo"></i> Reset Leaderboard
-                </button>
+                <div class="d-flex gap-2">
+                    <select id="categoryFilter" class="form-select" style="width: auto;">
+                        <option value="">Todas as Categorias</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            @foreach (var category in ViewBag.Categories)
+                            {
+                                var isSelected = ViewBag.CategoryId?.ToString() == category.Id.ToString();
+                                <option value="@category.Id" selected="@isSelected">@category.Name</option>
+                            }
+                        }
+                    </select>
+                    <button id="resetBtn" class="btn btn-warning">
+                        <i class="fas fa-redo"></i> Reset Leaderboard
+                    </button>
+                </div>
             </div>
 
             @if (!Model.Teams.Any() || !Model.Workouts.Any())
             {
                 <div class="alert alert-info" role="alert">
                     <h4 class="alert-heading">📋 Bem-vindo ao CrossFit Leaderboard!</h4>
-                    <p>Para começar a usar o leaderboard, você precisa:</p>
-                    <ul>
-                        @if (!Model.Teams.Any())
-                        {
-                            <li><strong>Criar equipes</strong> - Adicione as equipes que participarão da competição</li>
-                        }
-                        @if (!Model.Workouts.Any())
-                        {
-                            <li><strong>Criar workouts</strong> - Defina os exercícios que serão realizados</li>
-                        }
-                    </ul>
+                    <p>Para começar a usar o leaderboard, você precisa seguir esta ordem:</p>
+                    <ol>
+                        <li><strong>Criar categorias</strong> - Defina as categorias da competição (ex: RX Masculino, Scale Feminino)</li>
+                        <li><strong>Criar equipes</strong> - Adicione as equipes que participarão da competição (cada uma deve pertencer a uma categoria)</li>
+                        <li><strong>Criar workouts</strong> - Defina os exercícios que serão realizados (podem ser aplicados a múltiplas categorias)</li>
+                    </ol>
                     <hr>
                     <p class="mb-0">
-                        <a href="/Teams" class="btn btn-primary me-2">Gerenciar Equipes</a>
-                        <a href="/Workouts" class="btn btn-success">Gerenciar Workouts</a>
+                        <a href="/Categories" class="btn btn-info me-2">
+                            <i class="fas fa-tags"></i> Gerenciar Categorias
+                        </a>
+                        <a href="/Teams" class="btn btn-primary me-2">
+                            <i class="fas fa-users"></i> Gerenciar Equipes
+                        </a>
+                        <a href="/Workouts" class="btn btn-success">
+                            <i class="fas fa-dumbbell"></i> Gerenciar Workouts
+                        </a>
                     </p>
                 </div>
             }
@@ -68,7 +104,6 @@
                                     {
                                         <tr class="@(team.TotalPoints > 0 ? "table-light" : "")">
                                             <td class="fw-bold">
-                                                <span class="badge bg-primary me-2">@team.Id</span>
                                                 @team.Name
                                             </td>
                                             @foreach (var workout in Model.Workouts)
@@ -157,6 +192,21 @@
 
 @section Scripts {
     <script src="~/js/leaderboard.js"></script>
+    <script>
+        // Filtro de categoria
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            const categoryId = this.value;
+            const currentUrl = new URL(window.location);
+            
+            if (categoryId) {
+                currentUrl.searchParams.set('categoryId', categoryId);
+            } else {
+                currentUrl.searchParams.delete('categoryId');
+            }
+            
+            window.location.href = currentUrl.toString();
+        });
+    </script>
 }
 
 @functions {

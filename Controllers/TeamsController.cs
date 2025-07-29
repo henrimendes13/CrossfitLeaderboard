@@ -1,16 +1,20 @@
 using CrossfitLeaderboard.Entities;
 using CrossfitLeaderboard.Services.Interfaces;
+using CrossfitLeaderboard.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrossfitLeaderboard.Controllers
 {
     public class TeamsController : Controller
     {
         private readonly ITeamService _teamService;
+        private readonly ApplicationDbContext _context;
 
-        public TeamsController(ITeamService teamService)
+        public TeamsController(ITeamService teamService, ApplicationDbContext context)
         {
             _teamService = teamService;
+            _context = context;
         }
 
         // GET: Teams
@@ -21,21 +25,39 @@ namespace CrossfitLeaderboard.Controllers
         }
 
         // GET: Teams/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = categories;
             return View();
         }
 
         // POST: Teams/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name")] Team team)
+        public async Task<IActionResult> Create([Bind("Name,CategoryId")] Team team)
         {
             if (ModelState.IsValid)
             {
+                // Verificar se já existe um time com o mesmo nome na mesma categoria
+                var existingTeam = await _context.Teams
+                    .FirstOrDefaultAsync(t => t.Name.ToLower() == team.Name.ToLower() && t.CategoryId == team.CategoryId);
+
+                if (existingTeam != null)
+                {
+                    ModelState.AddModelError("Name", "Já existe um time com este nome nesta categoria.");
+                    var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+                    ViewBag.Categories = categories;
+                    return View(team);
+                }
+
                 await _teamService.CreateTeamAsync(team);
+                TempData["SuccessMessage"] = "Time criado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
+
+            var categoriesForView = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = categoriesForView;
             return View(team);
         }
 
@@ -47,13 +69,16 @@ namespace CrossfitLeaderboard.Controllers
             {
                 return NotFound();
             }
+
+            var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = categories;
             return View(team);
         }
 
         // POST: Teams/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,TotalPoints")] Team team)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,TotalPoints,CategoryId")] Team team)
         {
             if (id != team.Id)
             {
@@ -62,9 +87,27 @@ namespace CrossfitLeaderboard.Controllers
 
             if (ModelState.IsValid)
             {
+                // Verificar se já existe um time com o mesmo nome na mesma categoria (excluindo o atual)
+                var existingTeam = await _context.Teams
+                    .FirstOrDefaultAsync(t => t.Name.ToLower() == team.Name.ToLower() && 
+                                            t.CategoryId == team.CategoryId && 
+                                            t.Id != id);
+
+                if (existingTeam != null)
+                {
+                    ModelState.AddModelError("Name", "Já existe um time com este nome nesta categoria.");
+                    var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+                    ViewBag.Categories = categories;
+                    return View(team);
+                }
+
                 await _teamService.UpdateTeamAsync(team);
+                TempData["SuccessMessage"] = "Time atualizado com sucesso!";
                 return RedirectToAction(nameof(Index));
             }
+
+            var categoriesForView = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Categories = categoriesForView;
             return View(team);
         }
 

@@ -1,0 +1,151 @@
+@model IEnumerable<CrossfitLeaderboard.Entities.Category>
+
+@{
+    ViewData["Title"] = "Categorias";
+}
+
+<!-- Menu Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link active" href="/Categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <a class="nav-link" href="/Teams">
+                <i class="fas fa-users"></i> Teams
+            </a>
+            <a class="nav-link" href="/Workouts">
+                <i class="fas fa-dumbbell"></i> Workouts
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-primary">🏷️ Categorias</h1>
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Nova Categoria
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">📋 Nenhuma categoria encontrada!</h4>
+                    <p>Para começar a usar o sistema, você precisa criar pelo menos uma categoria.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a asp-action="Create" class="btn btn-primary">Criar Primeira Categoria</a>
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Lista de Categorias</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Times</th>
+                                        <th>Workouts</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var category in Model)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@category.Name</td>
+                                            <td>@category.Description</td>
+                                            <td>
+                                                <span class="badge bg-info">@category.Teams.Count times</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning text-dark">@category.WorkoutCategories.Count workouts</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">📋 Instruções</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li>Crie categorias para organizar os times e workouts</li>
+                                    <li>Exemplos: RX Masculino, Scale Feminino, Intermediário</li>
+                                    <li>Depois de criar categorias, você poderá criar times e workouts</li>
+                                    <li>Times devem pertencer a uma categoria específica</li>
+                                    <li>Workouts podem ser vinculados a múltiplas categorias</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">🎯 Próximos Passos</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="/Teams" class="btn btn-outline-primary">
+                                        <i class="fas fa-users"></i> Gerenciar Times
+                                    </a>
+                                    <a href="/Workouts" class="btn btn-outline-success">
+                                        <i class="fas fa-dumbbell"></i> Gerenciar Workouts
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div> 

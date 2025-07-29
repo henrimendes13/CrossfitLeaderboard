@@ -1,0 +1,78 @@
+@model CrossfitLeaderboard.Entities.Category
+
+@{
+    ViewData["Title"] = "Editar Categoria";
+}
+
+<!-- Menu Superior -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link active" href="/Categories">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+            <a class="nav-link" href="/Teams">
+                <i class="fas fa-users"></i> Teams
+            </a>
+            <a class="nav-link" href="/Workouts">
+                <i class="fas fa-dumbbell"></i> Workouts
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-primary">🏷️ Editar Categoria</h1>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Editar Categoria: @Model.Name</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Nome da Categoria</label>
+                            <input asp-for="Name" class="form-control" placeholder="Ex: RX Masculino Individual" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">Digite um nome único para a categoria.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Descrição</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Ex: Categoria para atletas masculinos que fazem os movimentos conforme prescrito"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Descreva as características desta categoria para facilitar a identificação.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Salvar Alterações
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 
