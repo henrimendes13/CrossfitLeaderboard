@@ -1,0 +1,111 @@
+@using CrossfitLeaderboard.Entities
+@model IEnumerable<CrossfitLeaderboard.Entities.Workout>
+
+@{
+    ViewData["Title"] = "Gerenciar Workouts";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-success">💪 Gerenciar Workouts</h1>
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Novo Workout
+                </a>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">Nenhum workout cadastrado</h4>
+                    <p>Clique no botão "Novo Workout" para começar a cadastrar os exercícios que serão realizados na competição.</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Workouts Cadastrados</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                        <th>Unidade</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var workout in Model.OrderBy(w => w.Id))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-success">@workout.Id</span>
+                                            </td>
+                                            <td class="fw-bold">@workout.Name</td>
+                                            <td>@workout.Description</td>
+                                            <td>
+                                                <span class="badge @GetWorkoutTypeBadgeClass(workout.Type)">
+                                                    @GetWorkoutTypeText(workout.Type)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@workout.Unit</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Edit" asp-route-id="@workout.Id" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i> Editar
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@workout.Id" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i> Excluir
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <a href="/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetWorkoutTypeBadgeClass(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Repetitions => "bg-warning text-dark",
+            WorkoutType.Time => "bg-danger",
+            WorkoutType.Weight => "bg-primary",
+            _ => "bg-secondary"
+        };
+    }
+
+    public string GetWorkoutTypeText(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Repetitions => "Repetições",
+            WorkoutType.Time => "Tempo",
+            WorkoutType.Weight => "Peso",
+            _ => "Desconhecido"
+        };
+    }
+} 

@@ -1,0 +1,117 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+/* Estilos personalizados para o Leaderboard */
+.position-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 10;
+}
+
+.result-input {
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.result-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.table th {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.table td {
+    vertical-align: middle;
+    position: relative;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.table-responsive {
+    border-radius: 0 0 10px 10px;
+}
+
+/* Animação para mudanças de posição */
+.position-badge .badge {
+    transition: all 0.3s ease;
+}
+
+/* Destaque para o vencedor */
+tr:first-child td:last-child {
+    background-color: #28a745 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Hover effects */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .position-badge {
+        position: static;
+        margin-top: 5px;
+    }
+    
+    .input-group-sm {
+        flex-direction: column;
+    }
+    
+    .input-group-sm .form-control {
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .input-group-sm .input-group-text {
+        border-radius: 0 0 4px 4px;
+        border-top: none;
+    }
+}

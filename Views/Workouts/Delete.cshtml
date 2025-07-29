@@ -1,0 +1,93 @@
+@using CrossfitLeaderboard.Entities
+@model CrossfitLeaderboard.Entities.Workout
+
+@{
+    ViewData["Title"] = "Excluir Workout";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-danger">⚠️ Excluir Workout</h1>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirmar Exclusão</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading">⚠️ Atenção!</h4>
+                        <p>Tem certeza que deseja excluir o workout <strong>"@Model.Name"</strong>?</p>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Esta ação irá:</strong>
+                        </p>
+                        <ul class="mb-0">
+                            <li>Excluir permanentemente o workout</li>
+                            <li>Remover todos os resultados associados a este workout</li>
+                            <li>Recalcular as posições dos outros workouts</li>
+                        </ul>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Detalhes do Workout:</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>ID:</strong> @Model.Id</li>
+                                <li><strong>Nome:</strong> @Model.Name</li>
+                                <li><strong>Descrição:</strong> @Model.Description</li>
+                                <li><strong>Tipo:</strong> 
+                                    <span class="badge @GetWorkoutTypeBadgeClass(Model.Type)">
+                                        @GetWorkoutTypeText(Model.Type)
+                                    </span>
+                                </li>
+                                <li><strong>Unidade:</strong> @Model.Unit</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmar Exclusão
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetWorkoutTypeBadgeClass(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Repetitions => "bg-warning text-dark",
+            WorkoutType.Time => "bg-danger",
+            WorkoutType.Weight => "bg-primary",
+            _ => "bg-secondary"
+        };
+    }
+
+    public string GetWorkoutTypeText(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Repetitions => "Repetições",
+            WorkoutType.Time => "Tempo",
+            WorkoutType.Weight => "Peso",
+            _ => "Desconhecido"
+        };
+    }
+} 

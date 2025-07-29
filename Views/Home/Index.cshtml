@@ -1,0 +1,186 @@
+﻿@using CrossfitLeaderboard.Entities
+@model CrossfitLeaderboard.Models.LeaderboardViewModel
+@{
+    ViewData["Title"] = "CrossFit Leaderboard";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-primary">🏆 CrossFit Leaderboard</h1>
+                <button id="resetBtn" class="btn btn-warning">
+                    <i class="fas fa-redo"></i> Reset Leaderboard
+                </button>
+            </div>
+
+            @if (!Model.Teams.Any() || !Model.Workouts.Any())
+            {
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">📋 Bem-vindo ao CrossFit Leaderboard!</h4>
+                    <p>Para começar a usar o leaderboard, você precisa:</p>
+                    <ul>
+                        @if (!Model.Teams.Any())
+                        {
+                            <li><strong>Criar equipes</strong> - Adicione as equipes que participarão da competição</li>
+                        }
+                        @if (!Model.Workouts.Any())
+                        {
+                            <li><strong>Criar workouts</strong> - Defina os exercícios que serão realizados</li>
+                        }
+                    </ul>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="/Teams" class="btn btn-primary me-2">Gerenciar Equipes</a>
+                        <a href="/Workouts" class="btn btn-success">Gerenciar Workouts</a>
+                    </p>
+                </div>
+            }
+            else
+            {
+                <!-- Tabela do Leaderboard -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Resultados dos Workouts</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0" id="leaderboardTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="text-center" style="width: 200px;">Equipe</th>
+                                        @foreach (var workout in Model.Workouts)
+                                        {
+                                            <th class="text-center">
+                                                <div class="fw-bold">@workout.Name</div>
+                                                <small class="text-muted">@workout.Description</small>
+                                                <br>
+                                                <span class="badge bg-info">@workout.Unit</span>
+                                            </th>
+                                        }
+                                        <th class="text-center bg-success text-white" style="width: 100px;">
+                                            <strong>Total<br>Pontos</strong>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var team in Model.Teams.OrderBy(t => t.TotalPoints))
+                                    {
+                                        <tr class="@(team.TotalPoints > 0 ? "table-light" : "")">
+                                            <td class="fw-bold">
+                                                <span class="badge bg-primary me-2">@team.Id</span>
+                                                @team.Name
+                                            </td>
+                                            @foreach (var workout in Model.Workouts)
+                                            {
+                                                var result = Model.ResultsMatrix[team.Id][workout.Id];
+                                                <td class="text-center position-relative">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" 
+                                                               class="form-control result-input" 
+                                                               data-team-id="@team.Id" 
+                                                               data-workout-id="@workout.Id"
+                                                               value="@(result.Result > 0 ? result.Result.ToString() : "")"
+                                                               placeholder="0"
+                                                               step="0.01"
+                                                               min="0">
+                                                        @if (workout.Type == WorkoutType.Time)
+                                                        {
+                                                            <span class="input-group-text">min</span>
+                                                        }
+                                                    </div>
+                                                    @if (result.Position > 0)
+                                                    {
+                                                        <div class="position-badge">
+                                                            <span class="badge @GetPositionBadgeClass(result.Position)">
+                                                                @GetPositionText(result.Position)
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </td>
+                                            }
+                                            <td class="text-center fw-bold @(team.TotalPoints > 0 ? "bg-success text-white" : "")">
+                                                @team.TotalPoints
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instruções -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">📋 Instruções</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li>Digite o resultado de cada equipe em cada workout</li>
+                                    <li>Para <strong>repetições</strong> e <strong>peso</strong>: maior valor = melhor posição</li>
+                                    <li>Para <strong>tempo</strong>: menor valor = melhor posição</li>
+                                    <li>Posições: 1º = 1 ponto, 2º = 2 pontos, etc.</li>
+                                    <li><strong>Vencedor</strong>: equipe com menor total de pontos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">🏅 Sistema de Pontuação</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="badge bg-warning text-dark">1º Lugar = 1 ponto</span><br>
+                                        <span class="badge bg-secondary">2º Lugar = 2 pontos</span><br>
+                                        <span class="badge bg-warning text-dark">3º Lugar = 3 pontos</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="badge bg-secondary">4º Lugar = 4 pontos</span><br>
+                                        <span class="badge bg-secondary">5º Lugar = 5 pontos</span><br>
+                                        <span class="badge bg-danger">Sem resultado = 0 ponto</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/leaderboard.js"></script>
+}
+
+@functions {
+    public string GetPositionBadgeClass(int position)
+    {
+        return position switch
+        {
+            1 => "bg-warning text-dark",
+            2 => "bg-secondary",
+            3 => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    public string GetPositionText(int position)
+    {
+        return position switch
+        {
+            1 => "🥇 1º",
+            2 => "🥈 2º",
+            3 => "🥉 3º",
+            4 => "4º",
+            5 => "5º",
+            _ => ""
+        };
+    }
+}

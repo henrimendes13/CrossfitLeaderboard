@@ -1,0 +1,80 @@
+@model IEnumerable<CrossfitLeaderboard.Entities.Team>
+
+@{
+    ViewData["Title"] = "Gerenciar Equipes";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-4 text-primary">👥 Gerenciar Equipes</h1>
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Nova Equipe
+                </a>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">Nenhuma equipe cadastrada</h4>
+                    <p>Clique no botão "Nova Equipe" para começar a cadastrar as equipes que participarão da competição.</p>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Equipes Cadastradas</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome da Equipe</th>
+                                        <th>Total de Pontos</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var team in Model.OrderBy(t => t.Id))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-primary">@team.Id</span>
+                                            </td>
+                                            <td class="fw-bold">@team.Name</td>
+                                            <td>
+                                                <span class="badge @(team.TotalPoints > 0 ? "bg-success" : "bg-secondary")">
+                                                    @team.TotalPoints pontos
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Edit" asp-route-id="@team.Id" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit"></i> Editar
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@team.Id" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i> Excluir
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <a href="/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div> 
