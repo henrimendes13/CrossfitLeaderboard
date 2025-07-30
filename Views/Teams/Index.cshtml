@@ -34,6 +34,7 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Nome da Equipe</th>
+                                        <th>Categoria</th>
                                         <th>Total de Pontos</th>
                                         <th class="text-center">Ações</th>
                                     </tr>
@@ -46,6 +47,16 @@
                                                 <span class="badge bg-primary">@team.Id</span>
                                             </td>
                                             <td class="fw-bold">@team.Name</td>
+                                            <td>
+                                                @if (team.Category != null)
+                                                {
+                                                    <span class="badge bg-info">@team.Category.Name</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Sem categoria</span>
+                                                }
+                                            </td>
                                             <td>
                                                 <span class="badge @(team.TotalPoints > 0 ? "bg-success" : "bg-secondary")">
                                                     @team.TotalPoints pontos

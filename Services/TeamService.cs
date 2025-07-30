@@ -18,6 +18,7 @@ namespace CrossfitLeaderboard.Services
         {
             return await _context.Teams
                 .Include(t => t.WorkoutResults)
+                .Include(t => t.Category)
                 .ToListAsync();
         }
 
@@ -25,6 +26,7 @@ namespace CrossfitLeaderboard.Services
         {
             return await _context.Teams
                 .Include(t => t.WorkoutResults)
+                .Include(t => t.Category)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -65,6 +67,7 @@ namespace CrossfitLeaderboard.Services
         {
             var teams = await _context.Teams
                 .Include(t => t.WorkoutResults)
+                .Include(t => t.Category)
                 .ToListAsync();
 
             // Calcular pontos totais para cada equipe

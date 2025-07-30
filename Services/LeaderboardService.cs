@@ -111,6 +111,8 @@ namespace CrossfitLeaderboard.Services
                     id = t.Id,
                     name = t.Name,
                     totalPoints = t.TotalPoints,
+                    firstPlaceCount = t.FirstPlaceCount,
+                    secondPlaceCount = t.SecondPlaceCount,
                     categoryId = t.CategoryId,
                     categoryName = t.Category?.Name
                 }),
@@ -161,11 +163,11 @@ namespace CrossfitLeaderboard.Services
             // Recalcular posições e pontos para este workout por categoria
             await CalculatePositionsAndPointsByCategoryAsync(workoutId);
             
-            // Recalcular pontos totais por categoria
-            await RecalculateTotalPointsByCategoryAsync();
+            // Recalcular pontos totais e critérios de desempate por categoria
+            await RecalculateTotalPointsAndTiebreakersByCategoryAsync();
         }
 
-        private async Task RecalculateTotalPointsByCategoryAsync()
+        private async Task RecalculateTotalPointsAndTiebreakersByCategoryAsync()
         {
             // Buscar todos os times com suas categorias
             var teams = await _context.Teams
@@ -189,14 +191,21 @@ namespace CrossfitLeaderboard.Services
 
                 var workoutIds = workoutsForCategory.Select(w => w.Id).ToList();
 
-                // Para cada time na categoria, calcular pontos totais apenas dos workouts aplicáveis
+                // Para cada time na categoria, calcular pontos totais e critérios de desempate
                 foreach (var team in teamsInCategory)
                 {
-                    var totalPoints = await _context.WorkoutResults
+                    var teamResults = await _context.WorkoutResults
                         .Where(r => r.TeamId == team.Id && workoutIds.Contains(r.WorkoutId))
-                        .SumAsync(r => r.Points);
+                        .ToListAsync();
+
+                    var totalPoints = teamResults.Sum(r => r.Points);
+                    var firstPlaceCount = teamResults.Count(r => r.Position == 1);
+                    var secondPlaceCount = teamResults.Count(r => r.Position == 2);
 
                     team.TotalPoints = (int)totalPoints;
+                    team.FirstPlaceCount = firstPlaceCount;
+                    team.SecondPlaceCount = secondPlaceCount;
+                    
                     _context.Teams.Update(team);
                 }
             }
@@ -254,17 +263,9 @@ namespace CrossfitLeaderboard.Services
                         }
                     }
 
-                    // Calcular posições
-                    int currentPosition = 1;
-
-                    // 1. Atribuir posições para resultados válidos (não 0)
+                    // Calcular posições com desempate
                     var nonZeroResults = sortedValidResults.Where(r => r.Result.Value > 0).ToList();
-                    foreach (var result in nonZeroResults)
-                    {
-                        result.Position = currentPosition;
-                        result.Points = currentPosition;
-                        currentPosition++;
-                    }
+                    AssignPositionsWithTies(nonZeroResults);
 
                     // 2. Atribuir pior posição para resultados desclassificados (0)
                     var totalTeamsInCategory = categoryResults.Count;
@@ -292,17 +293,53 @@ namespace CrossfitLeaderboard.Services
             await _context.SaveChangesAsync();
         }
 
+        private void AssignPositionsWithTies(List<WorkoutResult> results)
+        {
+            if (!results.Any()) return;
+
+            int currentPosition = 1;
+            int currentIndex = 0;
+
+            while (currentIndex < results.Count)
+            {
+                var currentResult = results[currentIndex];
+                var currentValue = currentResult.Result.Value;
+                
+                // Encontrar todos os resultados com o mesmo valor (empates)
+                var tiedResults = results.Skip(currentIndex)
+                    .TakeWhile(r => r.Result.Value == currentValue)
+                    .ToList();
+                
+                // Calcular pontos para o empate
+                // Se há empate, todos recebem a mesma posição
+                var pointsForTie = currentPosition;
+                
+                // Aplicar posição e pontos para todos os resultados empatados
+                foreach (var tiedResult in tiedResults)
+                {
+                    tiedResult.Position = currentPosition;
+                    tiedResult.Points = pointsForTie;
+                }
+                
+                // Avançar para a próxima posição (pular os empatados)
+                currentIndex += tiedResults.Count;
+                currentPosition = currentIndex + 1;
+            }
+        }
+
         public async Task ResetLeaderboardAsync()
         {
             // Remove all workout results
             var allResults = await _context.WorkoutResults.ToListAsync();
             _context.WorkoutResults.RemoveRange(allResults);
             
-            // Reset total points for all teams
+            // Reset total points and tiebreaker criteria for all teams
             var allTeams = await _context.Teams.ToListAsync();
             foreach (var team in allTeams)
             {
                 team.TotalPoints = 0;
+                team.FirstPlaceCount = 0;
+                team.SecondPlaceCount = 0;
                 _context.Teams.Update(team);
             }
             

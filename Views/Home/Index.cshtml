@@ -89,7 +89,11 @@
                 @foreach (var categoryGroup in teamsByCategory)
                 {
                     var category = categoryGroup.Key;
-                    var teamsInCategory = categoryGroup.OrderBy(t => t.TotalPoints).ToList();
+                    var teamsInCategory = categoryGroup
+                        .OrderBy(t => t.TotalPoints)
+                        .ThenByDescending(t => t.FirstPlaceCount)
+                        .ThenByDescending(t => t.SecondPlaceCount)
+                        .ToList();
                     
                     <!-- Workouts aplicáveis a esta categoria -->
                     var workoutsForCategory = Model.Workouts
@@ -134,7 +138,6 @@
                                             {
                                                 <tr class="@(team.TotalPoints > 0 ? "table-light" : "")">
                                                     <td class="fw-bold">
-                                                        <span class="badge bg-primary me-2">@team.Id</span>
                                                         @team.Name
                                                     </td>
                                                     @foreach (var workout in workoutsForCategory)
@@ -237,6 +240,7 @@
                                     <li>Para <strong>tempo</strong>: menor valor = melhor posição</li>
                                     <li>Posições: 1º = 1 ponto, 2º = 2 pontos, etc.</li>
                                     <li><strong>Vencedor</strong>: equipe com menor total de pontos</li>
+                                    <li><strong>Desempate</strong>: 1º critério = mais 1º lugares, 2º critério = mais 2º lugares</li>
                                 </ul>
                             </div>
                         </div>

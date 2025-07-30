@@ -12,6 +12,10 @@ namespace CrossfitLeaderboard.Entities
         
         public int TotalPoints { get; set; }
         
+        // Critérios de desempate
+        public int FirstPlaceCount { get; set; }
+        public int SecondPlaceCount { get; set; }
+        
         // Foreign key para Category
         public int? CategoryId { get; set; }
         

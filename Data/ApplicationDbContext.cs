@@ -86,7 +86,8 @@ namespace CrossfitLeaderboard.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
-                entity.Property(e => e.Result).HasPrecision(10, 2);
+                // SQLite não suporta HasPrecision, então removemos
+                entity.Property(e => e.Result);
                 entity.Property(e => e.Position).HasDefaultValue(0);
                 entity.Property(e => e.Points).HasDefaultValue(0);
 

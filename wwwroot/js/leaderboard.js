@@ -1,232 +1,232 @@
 class LeaderboardManager {
     constructor() {
+        this.teamsData = []; // Armazenar dados dos times para ordenação
         this.initializeEventListeners();
     }
 
     initializeEventListeners() {
-        // Atualizar resultado quando o input mudar
-        $(document).on('change', '.result-input', (e) => {
-            const input = $(e.target);
-            const teamId = input.data('team-id');
-            const workoutId = input.data('workout-id');
-            const workoutType = input.data('workout-type');
-            
-            let result = null;
-            const inputValue = input.val().trim();
-            
-            if (inputValue === '') {
-                // Campo vazio = null (workout não feito)
-                result = null;
-            } else if (workoutType === 'time') {
-                result = this.parseTimeToSeconds(inputValue);
-            } else if (workoutType === 'repetitions') {
-                result = this.parseInteger(inputValue);
-            } else if (workoutType === 'weight') {
-                result = this.parseDecimal(inputValue);
-            } else {
-                result = this.parseNumber(inputValue);
-            }
+        // Event listener para blur (sair do campo)
+        $(document).on('blur', '.result-input', (e) => {
+            console.log('Blur event triggered');
+            this.processInputChange(e.target);
+        });
 
-            this.updateResult(teamId, workoutId, result);
+        // Event listener para keydown (pressionar tecla)
+        $(document).on('keydown', '.result-input', (e) => {
+            // Só processar se for Enter (keyCode 13)
+            if (e.keyCode === 13) {
+                console.log('Enter key pressed');
+                e.preventDefault(); // Prevenir comportamento padrão do Enter
+                this.processInputChange(e.target);
+                e.target.blur(); // Remover foco do campo
+            }
+        });
+
+        // Event listener para reset
+        $('#resetBtn').on('click', () => {
+            if (confirm('Tem certeza que deseja resetar todo o leaderboard? Esta ação não pode ser desfeita.')) {
+                this.resetLeaderboard();
+            }
         });
 
         // Máscara para inputs de peso
         $(document).on('input', '.weight-input', (e) => {
             this.applyWeightMask(e.target);
         });
+    }
 
-        // Reset do leaderboard
-        $('#resetBtn').on('click', () => {
-            if (confirm('Tem certeza que deseja resetar o leaderboard?')) {
-                this.resetLeaderboard();
+    processInputChange(input) {
+        const teamId = parseInt(input.dataset.teamId);
+        const workoutId = parseInt(input.dataset.workoutId);
+        const workoutType = input.dataset.workoutType;
+        
+        let result = null;
+        
+        if (input.value.trim() !== '') {
+            switch (workoutType) {
+                case 'time':
+                    result = this.parseTimeToSeconds(input.value);
+                    break;
+                case 'repetitions':
+                    result = this.parseInteger(input.value);
+                    break;
+                case 'weight':
+                    result = this.parseDecimal(input.value);
+                    break;
+                default:
+                    result = this.parseNumber(input.value);
+                    break;
             }
-        });
+        }
+        
+        console.log('Processing input change:', { teamId, workoutId, result });
+        this.updateResult(teamId, workoutId, result);
     }
 
     parseInteger(value) {
-        if (!value || value.trim() === '') return 0;
-        
-        // Remover espaços e converter vírgula para ponto
-        const cleanValue = value.toString().trim().replace(',', '.');
-        const parsed = parseInt(cleanValue);
-        
-        return isNaN(parsed) ? 0 : parsed;
+        const parsed = parseInt(value);
+        return isNaN(parsed) ? null : parsed;
     }
 
     parseDecimal(value) {
-        if (!value || value.trim() === '') return 0;
-        
-        // Remover espaços e converter vírgula para ponto
-        const cleanValue = value.toString().trim().replace(',', '.');
-        const parsed = parseFloat(cleanValue);
-        
-        return isNaN(parsed) ? 0 : parsed;
+        // Converter vírgula para ponto para parsing
+        const normalizedValue = value.replace(',', '.');
+        const parsed = parseFloat(normalizedValue);
+        return isNaN(parsed) ? null : parsed;
     }
 
     parseNumber(value) {
-        if (!value || value.trim() === '') return 0;
-        
-        // Remover espaços e converter vírgula para ponto
-        const cleanValue = value.toString().trim().replace(',', '.');
-        const parsed = parseFloat(cleanValue);
-        
-        return isNaN(parsed) ? 0 : parsed;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? null : parsed;
     }
 
     parseTimeToSeconds(timeString) {
-        if (!timeString || timeString.trim() === '') return 0;
+        const match = timeString.match(/^(\d+):(\d{2})$/);
+        if (!match) return null;
         
-        // Formato esperado: "min:sec" (ex: "10:30")
-        const parts = timeString.split(':');
-        if (parts.length !== 2) return 0;
+        const minutes = parseInt(match[1]);
+        const seconds = parseInt(match[2]);
         
-        const minutes = parseInt(parts[0]) || 0;
-        const seconds = parseInt(parts[1]) || 0;
+        if (seconds >= 60) return null;
         
         return minutes * 60 + seconds;
     }
 
     formatSecondsToTime(seconds) {
-        if (seconds <= 0) return '';
-        
+        if (!seconds || seconds <= 0) return '';
         const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = Math.floor(seconds % 60);
+        const remainingSeconds = seconds % 60;
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
 
     formatInteger(value) {
-        if (value <= 0) return '';
-        return Math.floor(value).toString();
+        return value ? Math.floor(value).toString() : '';
     }
 
     formatDecimal(value) {
-        if (value <= 0) return '';
-        // Formatar com vírgula para exibição (formato brasileiro)
-        return value.toFixed(2).replace('.', ',');
+        return value ? value.toFixed(2).replace('.', ',') : '';
     }
 
-    updateResult(teamId, workoutId, result) {
-        $.ajax({
-            url: '/Home/UpdateResult',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                teamId: teamId,
-                workoutId: workoutId,
-                result: result // Pode ser null, 0, ou um valor positivo
-            }),
-            success: (response) => {
-                if (response.success) {
-                    this.updateLeaderboardDisplay(response.leaderboard);
+    async updateResult(teamId, workoutId, result) {
+        try {
+            const response = await fetch('/Home/UpdateResult', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    teamId: teamId,
+                    workoutId: workoutId,
+                    result: result
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.leaderboard) {
+                    this.updateLeaderboardDisplay(data.leaderboard);
                 } else {
-                    alert('Erro ao atualizar resultado: ' + response.message);
+                    console.error('Erro ao atualizar resultado:', data.message);
                 }
-            },
-            error: (xhr, status, error) => {
-                console.error('Erro AJAX:', xhr.responseText);
-                alert('Erro ao comunicar com o servidor. Verifique o console para mais detalhes.');
+            } else {
+                console.error('Erro ao atualizar resultado');
             }
-        });
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+        }
     }
 
-    resetLeaderboard() {
-        $.ajax({
-            url: '/Home/ResetLeaderboard',
-            type: 'POST',
-            success: (response) => {
-                if (response.success) {
-                    this.updateLeaderboardDisplay(response.leaderboard);
-                    $('.result-input').val('');
-                    
-                    // Clear all total points cells
-                    $('td:last-child').each(function() {
-                        $(this).text('0');
-                        $(this).removeClass('bg-success text-white');
-                    });
-                    
-                    // Remove all position badges
-                    $('.position-badge').remove();
+    async resetLeaderboard() {
+        try {
+            const response = await fetch('/Home/ResetLeaderboard', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
                 } else {
-                    alert('Erro ao resetar leaderboard');
+                    console.error('Erro ao resetar leaderboard');
                 }
-            },
-            error: (xhr, status, error) => {
-                console.error('Erro AJAX:', xhr.responseText);
-                alert('Erro ao comunicar com o servidor. Verifique o console para mais detalhes.');
+            } else {
+                console.error('Erro ao resetar leaderboard');
             }
-        });
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+        }
     }
 
     updateLeaderboardDisplay(leaderboard) {
-        // Atualizar valores dos inputs
-        leaderboard.teams.forEach((team) => {
-            leaderboard.workouts.forEach((workout) => {
-                const result = leaderboard.results.find(r => 
-                    r.teamId === team.id && r.workoutId === workout.id);
-                
-                const input = $(`.result-input[data-team-id="${team.id}"][data-workout-id="${workout.id}"]`);
-                if (input.length > 0) {
-                    // Verificar se o resultado existe antes de acessar suas propriedades
-                    if (result) {
-                        const workoutType = input.data('workout-type');
-                        
-                        if (result.result === null) {
-                            // Resultado null = workout não feito, deixar campo vazio
-                            input.val('');
-                        } else if (workoutType === 'time') {
-                            // Para inputs de tempo, converter segundos para formato min:sec
-                            input.val(result.result > 0 ? this.formatSecondsToTime(result.result) : '');
-                        } else if (workoutType === 'repetitions') {
-                            // Para repetições, exibir como inteiro
-                            input.val(result.result > 0 ? this.formatInteger(result.result) : '');
-                        } else if (workoutType === 'weight') {
-                            // Para peso, exibir como decimal com vírgula
-                            input.val(result.result > 0 ? this.formatDecimal(result.result) : '');
-                        } else {
-                            // Fallback para outros tipos
-                            const numericValue = this.parseNumber(result.result);
-                            if (numericValue > 0) {
-                                input.val(this.formatDecimal(numericValue));
-                            } else {
-                                input.val('');
-                            }
-                        }
-                        // Atualizar badge de posição
-                        this.updatePositionBadge(input, result);
-                    } else {
-                        // Se não há resultado, limpar o input e remover badge
-                        input.val('');
-                        this.updatePositionBadge(input, { position: 0, result: null });
-                    }
+        // Verificar se leaderboard existe e tem a estrutura esperada
+        if (!leaderboard || !leaderboard.results || !leaderboard.teams) {
+            console.error('Estrutura de dados inválida:', leaderboard);
+            return;
+        }
+
+        console.log('Atualizando leaderboard com:', leaderboard.results.length, 'resultados');
+
+        // Armazenar dados dos times para ordenação
+        this.teamsData = leaderboard.teams;
+
+        // Limpar todos os badges existentes primeiro
+        $('.position-badge').empty();
+
+        // Atualizar resultados
+        leaderboard.results.forEach(result => {
+            // Usar uma seleção mais específica
+            const input = $(`input.result-input[data-team-id="${result.teamId}"][data-workout-id="${result.workoutId}"]`);
+            console.log(`Procurando input para team ${result.teamId}, workout ${result.workoutId}:`, input.length > 0 ? 'encontrado' : 'não encontrado');
+            
+            if (input.length > 0) {
+                this.updatePositionBadge(input, result);
+            } else {
+                console.warn(`Input não encontrado para team ${result.teamId}, workout ${result.workoutId}`);
+                // Tentar uma busca alternativa
+                const alternativeInput = $(`.result-input[data-team-id="${result.teamId}"][data-workout-id="${result.workoutId}"]`);
+                if (alternativeInput.length > 0) {
+                    console.log('Input encontrado com busca alternativa');
+                    this.updatePositionBadge(alternativeInput, result);
                 }
-            });
+            }
         });
 
-        // Atualizar pontos totais e reordenar por categoria
+        // Atualizar total de pontos
         this.updateTotalPoints(leaderboard.teams);
+        
+        // Reordenar times usando critérios de desempate
         this.reorderTeamsByCategory();
     }
 
     updatePositionBadge(input, result) {
         const cell = input.closest('td');
-        const positionBadge = cell.find('.position-badge');
+        let badgeContainer = cell.find('.position-badge');
         
-        if (result && result.position > 0) {
-            if (positionBadge.length === 0) {
-                cell.append(`<div class="position-badge"><span class="badge ${this.getPositionBadgeClass(result.position)}">${this.getPositionText(result.position)}</span></div>`);
-            } else {
-                positionBadge.find('.badge')
-                    .removeClass()
-                    .addClass(`badge ${this.getPositionBadgeClass(result.position)}`)
-                    .text(this.getPositionText(result.position));
-            }
+        // Se não encontrar o container, criar um
+        if (badgeContainer.length === 0) {
+            badgeContainer = $('<div class="position-badge"></div>');
+            cell.append(badgeContainer);
+        }
+        
+        console.log(`Atualizando badge para team ${result.teamId}, workout ${result.workoutId}, posição ${result.position}`);
+        
+        // Remover badge existente
+        badgeContainer.empty();
+        
+        // Adicionar novo badge se houver posição
+        if (result.position > 0) {
+            const badgeClass = this.getPositionBadgeClass(result.position);
+            const badgeText = this.getPositionText(result.position);
+            const badge = $(`<span class="badge ${badgeClass}">${badgeText}</span>`);
+            badgeContainer.append(badge);
+            console.log(`Badge adicionado: ${badgeText} com classe ${badgeClass}`);
         } else {
-            positionBadge.remove();
+            console.log('Nenhum badge adicionado - posição 0 ou inválida');
         }
     }
 
     updateTotalPoints(teams) {
-        teams.forEach((team) => {
+        teams.forEach(team => {
             const totalCell = $(`tr:has(.result-input[data-team-id="${team.id}"]) td:last`);
             if (totalCell.length > 0) {
                 totalCell.text(team.totalPoints);
@@ -239,15 +239,38 @@ class LeaderboardManager {
     }
 
     reorderTeamsByCategory() {
-        // Reordenar times dentro de cada categoria
+        // Reordenar times dentro de cada categoria usando critérios de desempate
         $('.leaderboard-table').each((index, table) => {
             const tbody = $(table).find('tbody');
             const rows = tbody.find('tr').get();
+            
             rows.sort((a, b) => {
-                const aPoints = parseInt($(a).find('td:last').text()) || 0;
-                const bPoints = parseInt($(b).find('td:last').text()) || 0;
-                return aPoints - bPoints;
+                // Encontrar os dados dos times correspondentes
+                const aTeamId = parseInt($(a).find('.result-input').first().data('team-id'));
+                const bTeamId = parseInt($(b).find('.result-input').first().data('team-id'));
+                
+                const aTeam = this.teamsData.find(t => t.id === aTeamId);
+                const bTeam = this.teamsData.find(t => t.id === bTeamId);
+                
+                if (!aTeam || !bTeam) {
+                    console.warn('Time não encontrado nos dados:', { aTeamId, bTeamId });
+                    return 0;
+                }
+                
+                // Primeiro critério: total de pontos (menor é melhor)
+                if (aTeam.totalPoints !== bTeam.totalPoints) {
+                    return aTeam.totalPoints - bTeam.totalPoints;
+                }
+                
+                // Segundo critério: número de 1º lugares (maior é melhor)
+                if (aTeam.firstPlaceCount !== bTeam.firstPlaceCount) {
+                    return bTeam.firstPlaceCount - aTeam.firstPlaceCount;
+                }
+                
+                // Terceiro critério: número de 2º lugares (maior é melhor)
+                return bTeam.secondPlaceCount - aTeam.secondPlaceCount;
             });
+            
             tbody.empty().append(rows);
         });
     }
