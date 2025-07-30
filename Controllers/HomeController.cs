@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using CrossfitLeaderboard.Models;
 using CrossfitLeaderboard.Services;
+using CrossfitLeaderboard.Services.Interfaces;
 using CrossfitLeaderboard.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,12 +12,14 @@ namespace CrossfitLeaderboard.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly LeaderboardService _leaderboardService;
+        private readonly IPdfService _pdfService;
         private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, LeaderboardService leaderboardService, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, LeaderboardService leaderboardService, IPdfService pdfService, ApplicationDbContext context)
         {
             _logger = logger;
             _leaderboardService = leaderboardService;
+            _pdfService = pdfService;
             _context = context;
         }
 
@@ -36,8 +39,9 @@ namespace CrossfitLeaderboard.Controllers
             if (ModelState.IsValid)
             {
                 await _leaderboardService.UpdateResultAsync(model.TeamId, model.WorkoutId, model.Result);
-                var leaderboard = await _leaderboardService.GetLeaderboardAsync();
-                return Json(new { success = true, leaderboard = leaderboard });
+                var leaderboardDto = await _leaderboardService.GetLeaderboardDtoAsync();
+                
+                return Json(new { success = true, leaderboard = leaderboardDto });
             }
             return Json(new { success = false, message = "Dados inválidos" });
         }
@@ -46,8 +50,28 @@ namespace CrossfitLeaderboard.Controllers
         public async Task<IActionResult> ResetLeaderboard()
         {
             await _leaderboardService.ResetLeaderboardAsync();
-            var leaderboard = await _leaderboardService.GetLeaderboardAsync();
-            return Json(new { success = true, leaderboard = leaderboard });
+            var leaderboardDto = await _leaderboardService.GetLeaderboardDtoAsync();
+            
+            return Json(new { success = true, leaderboard = leaderboardDto });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadPdf()
+        {
+            try
+            {
+                var leaderboard = await _leaderboardService.GetLeaderboardAsync();
+                var pdfBytes = await _pdfService.GenerateLeaderboardPdfAsync(leaderboard);
+                
+                string fileName = $"CrossFit_Leaderboard_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao gerar PDF");
+                return RedirectToAction("Index");
+            }
         }
 
         public IActionResult Privacy()

@@ -100,7 +100,40 @@ namespace CrossfitLeaderboard.Services
             return viewModel;
         }
 
-        public async Task UpdateResultAsync(int teamId, int workoutId, decimal result)
+        public async Task<object> GetLeaderboardDtoAsync(int? categoryId = null)
+        {
+            var leaderboard = await GetLeaderboardAsync(categoryId);
+            
+            return new
+            {
+                teams = leaderboard.Teams.Select(t => new
+                {
+                    id = t.Id,
+                    name = t.Name,
+                    totalPoints = t.TotalPoints,
+                    categoryId = t.CategoryId,
+                    categoryName = t.Category?.Name
+                }),
+                workouts = leaderboard.Workouts.Select(w => new
+                {
+                    id = w.Id,
+                    name = w.Name,
+                    description = w.Description,
+                    unit = w.Unit,
+                    type = w.Type
+                }),
+                results = leaderboard.Results.Select(r => new
+                {
+                    teamId = r.TeamId,
+                    workoutId = r.WorkoutId,
+                    result = r.Result,
+                    position = r.Position,
+                    points = r.Points
+                })
+            };
+        }
+
+        public async Task UpdateResultAsync(int teamId, int workoutId, decimal? result)
         {
             var workoutResult = await _context.WorkoutResults
                 .FirstOrDefaultAsync(r => r.TeamId == teamId && r.WorkoutId == workoutId);
@@ -125,59 +158,154 @@ namespace CrossfitLeaderboard.Services
 
             await _context.SaveChangesAsync();
 
-            // Recalcular posições e pontos para este workout
-            await CalculatePositionsAndPointsAsync(workoutId);
+            // Recalcular posições e pontos para este workout por categoria
+            await CalculatePositionsAndPointsByCategoryAsync(workoutId);
+            
+            // Recalcular pontos totais por categoria
+            await RecalculateTotalPointsByCategoryAsync();
         }
 
-        private async Task CalculatePositionsAndPointsAsync(int workoutId)
+        private async Task RecalculateTotalPointsByCategoryAsync()
+        {
+            // Buscar todos os times com suas categorias
+            var teams = await _context.Teams
+                .Include(t => t.Category)
+                .Where(t => t.CategoryId.HasValue)
+                .ToListAsync();
+
+            // Agrupar times por categoria
+            var teamsByCategory = teams.GroupBy(t => t.CategoryId.Value).ToList();
+
+            foreach (var categoryGroup in teamsByCategory)
+            {
+                var categoryId = categoryGroup.Key;
+                var teamsInCategory = categoryGroup.ToList();
+
+                // Buscar workouts aplicáveis a esta categoria
+                var workoutsForCategory = await _context.Workouts
+                    .Include(w => w.WorkoutCategories)
+                    .Where(w => w.WorkoutCategories.Any(wc => wc.CategoryId == categoryId))
+                    .ToListAsync();
+
+                var workoutIds = workoutsForCategory.Select(w => w.Id).ToList();
+
+                // Para cada time na categoria, calcular pontos totais apenas dos workouts aplicáveis
+                foreach (var team in teamsInCategory)
+                {
+                    var totalPoints = await _context.WorkoutResults
+                        .Where(r => r.TeamId == team.Id && workoutIds.Contains(r.WorkoutId))
+                        .SumAsync(r => r.Points);
+
+                    team.TotalPoints = (int)totalPoints;
+                    _context.Teams.Update(team);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CalculatePositionsAndPointsByCategoryAsync(int workoutId)
         {
             var workout = await _workoutService.GetWorkoutByIdAsync(workoutId);
             if (workout == null) return;
 
-            var workoutResults = await _context.WorkoutResults
-                .Where(r => r.WorkoutId == workoutId && r.Result > 0)
+            // Buscar todos os resultados deste workout
+            var allWorkoutResults = await _context.WorkoutResults
+                .Include(r => r.Team)
+                .Where(r => r.WorkoutId == workoutId)
                 .ToListAsync();
 
-            if (workoutResults.Any())
+            // Agrupar resultados por categoria
+            var resultsByCategory = allWorkoutResults
+                .Where(r => r.Team.CategoryId.HasValue)
+                .GroupBy(r => r.Team.CategoryId.Value)
+                .ToList();
+
+            foreach (var categoryGroup in resultsByCategory)
             {
-                // Ordenar baseado no tipo de workout
-                List<WorkoutResult> sortedResults;
-                switch (workout.Type)
-                {
-                    case WorkoutType.Repetitions:
-                    case WorkoutType.Weight:
-                        // Mais é melhor (repetições e peso)
-                        sortedResults = workoutResults.OrderByDescending(r => r.Result).ToList();
-                        break;
-                    case WorkoutType.Time:
-                        // Menos é melhor (tempo)
-                        sortedResults = workoutResults.OrderBy(r => r.Result).ToList();
-                        break;
-                    default:
-                        sortedResults = workoutResults.ToList();
-                        break;
-                }
+                var categoryId = categoryGroup.Key;
+                var categoryResults = categoryGroup.ToList();
 
-                // Atribuir posições e pontos
-                for (int i = 0; i < sortedResults.Count; i++)
+                if (categoryResults.Any())
                 {
-                    sortedResults[i].Position = i + 1;
-                    sortedResults[i].Points = i + 1;
-                }
+                    // Separar resultados válidos (não null) dos inválidos
+                    var validResults = categoryResults.Where(r => r.Result.HasValue).ToList();
+                    var invalidResults = categoryResults.Where(r => !r.Result.HasValue).ToList();
+                    var disqualifiedResults = categoryResults.Where(r => r.Result.HasValue && r.Result.Value == 0).ToList();
 
-                // Atualizar no banco
-                foreach (var result in sortedResults)
-                {
-                    _context.WorkoutResults.Update(result);
+                    // Ordenar resultados válidos baseado no tipo de workout
+                    List<WorkoutResult> sortedValidResults = new List<WorkoutResult>();
+                    if (validResults.Any())
+                    {
+                        switch (workout.Type)
+                        {
+                            case WorkoutType.Repetitions:
+                            case WorkoutType.Weight:
+                                // Mais é melhor (repetições e peso)
+                                sortedValidResults = validResults.OrderByDescending(r => r.Result.Value).ToList();
+                                break;
+                            case WorkoutType.Time:
+                                // Menos é melhor (tempo)
+                                sortedValidResults = validResults.OrderBy(r => r.Result.Value).ToList();
+                                break;
+                            default:
+                                sortedValidResults = validResults.ToList();
+                                break;
+                        }
+                    }
+
+                    // Calcular posições
+                    int currentPosition = 1;
+
+                    // 1. Atribuir posições para resultados válidos (não 0)
+                    var nonZeroResults = sortedValidResults.Where(r => r.Result.Value > 0).ToList();
+                    foreach (var result in nonZeroResults)
+                    {
+                        result.Position = currentPosition;
+                        result.Points = currentPosition;
+                        currentPosition++;
+                    }
+
+                    // 2. Atribuir pior posição para resultados desclassificados (0)
+                    var totalTeamsInCategory = categoryResults.Count;
+                    foreach (var result in disqualifiedResults)
+                    {
+                        result.Position = totalTeamsInCategory;
+                        result.Points = totalTeamsInCategory;
+                    }
+
+                    // 3. Manter posição 0 para resultados não feitos (null)
+                    foreach (var result in invalidResults)
+                    {
+                        result.Position = 0;
+                        result.Points = 0;
+                    }
+
+                    // Atualizar no banco
+                    foreach (var result in categoryResults)
+                    {
+                        _context.WorkoutResults.Update(result);
+                    }
                 }
-                await _context.SaveChangesAsync();
             }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task ResetLeaderboardAsync()
         {
+            // Remove all workout results
             var allResults = await _context.WorkoutResults.ToListAsync();
             _context.WorkoutResults.RemoveRange(allResults);
+            
+            // Reset total points for all teams
+            var allTeams = await _context.Teams.ToListAsync();
+            foreach (var team in allTeams)
+            {
+                team.TotalPoints = 0;
+                _context.Teams.Update(team);
+            }
+            
             await _context.SaveChangesAsync();
         }
     }

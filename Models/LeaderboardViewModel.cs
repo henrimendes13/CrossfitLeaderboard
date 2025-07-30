@@ -14,6 +14,6 @@ namespace CrossfitLeaderboard.Models
     {
         public int TeamId { get; set; }
         public int WorkoutId { get; set; }
-        public decimal Result { get; set; }
+        public decimal? Result { get; set; } // Nullable para diferenciar entre não feito (null) e desclassificado (0)
     }
 } 

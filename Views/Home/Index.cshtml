@@ -29,7 +29,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="display-4 text-primary">🏆 CrossFit Leaderboard</h1>
+                <h1 class="display-4 text-primary">🏆 Leaderboard Desafio Ceros</h1>
                 <div class="d-flex gap-2">
                     <select id="categoryFilter" class="form-select" style="width: auto;">
                         <option value="">Todas as Categorias</option>
@@ -45,6 +45,9 @@
                     <button id="resetBtn" class="btn btn-warning">
                         <i class="fas fa-redo"></i> Reset Leaderboard
                     </button>
+                    <a href="/Home/DownloadPdf" class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
                 </div>
             </div>
 
@@ -74,76 +77,151 @@
             }
             else
             {
-                <!-- Tabela do Leaderboard -->
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Resultados dos Workouts</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover mb-0" id="leaderboardTable">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th class="text-center" style="width: 200px;">Equipe</th>
-                                        @foreach (var workout in Model.Workouts)
-                                        {
-                                            <th class="text-center">
-                                                <div class="fw-bold">@workout.Name</div>
-                                                <small class="text-muted">@workout.Description</small>
-                                                <br>
-                                                <span class="badge bg-info">@workout.Unit</span>
-                                            </th>
-                                        }
-                                        <th class="text-center bg-success text-white" style="width: 100px;">
-                                            <strong>Total<br>Pontos</strong>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var team in Model.Teams.OrderBy(t => t.TotalPoints))
+                <!-- Leaderboards Separados por Categoria -->
+                
+                    var teamsByCategory = Model.Teams
+                            .Where(t => t.Category != null)
+                            .GroupBy(t => t.Category)
+                            .OrderBy(g => g.Key.Name)
+                            .ToList();
+                
+
+                @foreach (var categoryGroup in teamsByCategory)
+                {
+                    var category = categoryGroup.Key;
+                    var teamsInCategory = categoryGroup.OrderBy(t => t.TotalPoints).ToList();
+                    
+                    <!-- Workouts aplicáveis a esta categoria -->
+                    var workoutsForCategory = Model.Workouts
+                        .Where(w => w.WorkoutCategories.Any(wc => wc.CategoryId == category.Id))
+                        .ToList();
+
+                    @if (teamsInCategory.Any() && workoutsForCategory.Any())
+                    {
+                        <div class="card shadow mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-trophy"></i> 
+                                    @category.Name
+                                    @if (!string.IsNullOrEmpty(category.Description))
                                     {
-                                        <tr class="@(team.TotalPoints > 0 ? "table-light" : "")">
-                                            <td class="fw-bold">
-                                                @team.Name
-                                            </td>
-                                            @foreach (var workout in Model.Workouts)
-                                            {
-                                                var result = Model.ResultsMatrix[team.Id][workout.Id];
-                                                <td class="text-center position-relative">
-                                                    <div class="input-group input-group-sm">
-                                                        <input type="number" 
-                                                               class="form-control result-input" 
-                                                               data-team-id="@team.Id" 
-                                                               data-workout-id="@workout.Id"
-                                                               value="@(result.Result > 0 ? result.Result.ToString() : "")"
-                                                               placeholder="0"
-                                                               step="0.01"
-                                                               min="0">
-                                                        @if (workout.Type == WorkoutType.Time)
-                                                        {
-                                                            <span class="input-group-text">min</span>
-                                                        }
-                                                    </div>
-                                                    @if (result.Position > 0)
-                                                    {
-                                                        <div class="position-badge">
-                                                            <span class="badge @GetPositionBadgeClass(result.Position)">
-                                                                @GetPositionText(result.Position)
-                                                            </span>
-                                                        </div>
-                                                    }
-                                                </td>
-                                            }
-                                            <td class="text-center fw-bold @(team.TotalPoints > 0 ? "bg-success text-white" : "")">
-                                                @team.TotalPoints
-                                            </td>
-                                        </tr>
+                                        <small class="d-block text-light">@category.Description</small>
                                     }
-                                </tbody>
-                            </table>
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover mb-0 leaderboard-table" data-category-id="@category.Id">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th class="text-center" style="width: 200px;">Equipe</th>
+                                                @foreach (var workout in workoutsForCategory)
+                                                {
+                                                    <th class="text-center">
+                                                        <div class="fw-bold">@workout.Name</div>
+                                                        <small class="text-muted">@workout.Description</small>
+                                                        <br>
+                                                        <span class="badge bg-info">@workout.Unit</span>
+                                                    </th>
+                                                }
+                                                <th class="text-center bg-success text-white" style="width: 100px;">
+                                                    <strong>Total<br>Pontos</strong>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var team in teamsInCategory)
+                                            {
+                                                <tr class="@(team.TotalPoints > 0 ? "table-light" : "")">
+                                                    <td class="fw-bold">
+                                                        <span class="badge bg-primary me-2">@team.Id</span>
+                                                        @team.Name
+                                                    </td>
+                                                    @foreach (var workout in workoutsForCategory)
+                                                    {
+                                                        var result = Model.ResultsMatrix[team.Id][workout.Id];
+                                                        <td class="text-center position-relative">
+                                                            <div class="input-group input-group-sm">
+                                                                @if (workout.Type == WorkoutType.Time)
+                                                                {
+                                                                    <input type="text" 
+                                                                           class="form-control result-input time-input" 
+                                                                           data-team-id="@team.Id" 
+                                                                           data-workout-id="@workout.Id"
+                                                                           data-workout-type="time"
+                                                                           value="@(result.Result.HasValue && result.Result > 0 ? FormatTimeResult(result.Result.Value) : "")"
+                                                                           placeholder="0:00"
+                                                                           pattern="[0-9]+:[0-5][0-9]"
+                                                                           title="Formato: minutos:segundos (ex: 10:30)">
+                                                                }
+                                                                else if (workout.Type == WorkoutType.Repetitions)
+                                                                {
+                                                                    <input type="number" 
+                                                                           class="form-control result-input" 
+                                                                           data-team-id="@team.Id" 
+                                                                           data-workout-id="@workout.Id"
+                                                                           data-workout-type="repetitions"
+                                                                           value="@(result.Result.HasValue && result.Result > 0 ? FormatInteger(result.Result.Value) : "")"
+                                                                           placeholder="0"
+                                                                           step="1"
+                                                                           min="0">
+                                                                }
+                                                                else if (workout.Type == WorkoutType.Weight)
+                                                                {
+                                                                    <input type="text" 
+                                                                           class="form-control result-input weight-input" 
+                                                                           data-team-id="@team.Id" 
+                                                                           data-workout-id="@workout.Id"
+                                                                           data-workout-type="weight"
+                                                                           value="@(result.Result.HasValue && result.Result > 0 ? FormatDecimal(result.Result.Value) : "")"
+                                                                           placeholder="0,00"
+                                                                           title="Digite o peso usando vírgula como separador decimal (ex: 200,50)">
+                                                                }
+                                                                else
+                                                                {
+                                                                    <input type="number" 
+                                                                           class="form-control result-input" 
+                                                                           data-team-id="@team.Id" 
+                                                                           data-workout-id="@workout.Id"
+                                                                           data-workout-type="number"
+                                                                           value="@(result.Result.HasValue && result.Result > 0 ? FormatDecimal(result.Result.Value) : "")"
+                                                                           placeholder="0"
+                                                                           step="0.01"
+                                                                           min="0">
+                                                                }
+                                                            </div>
+                                                            @if (result.Position > 0)
+                                                            {
+                                                                <div class="position-badge">
+                                                                    <span class="badge @GetPositionBadgeClass(result.Position)">
+                                                                        @GetPositionText(result.Position)
+                                                                    </span>
+                                                                </div>
+                                                            }
+                                                        </td>
+                                                    }
+                                                    <td class="text-center fw-bold @(team.TotalPoints > 0 ? "bg-success text-white" : "")">
+                                                        @team.TotalPoints
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
+                    }
+                }
+
+                @if (!teamsByCategory.Any())
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Nenhum time encontrado!</strong>
+                        <br>Você precisa criar times associados a categorias para ver os leaderboards.
                     </div>
-                </div>
+                }
+            }
 
                 <!-- Instruções -->
                 <div class="row mt-4">
@@ -163,29 +241,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">🏅 Sistema de Pontuação</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <span class="badge bg-warning text-dark">1º Lugar = 1 ponto</span><br>
-                                        <span class="badge bg-secondary">2º Lugar = 2 pontos</span><br>
-                                        <span class="badge bg-warning text-dark">3º Lugar = 3 pontos</span>
-                                    </div>
-                                    <div class="col-6">
-                                        <span class="badge bg-secondary">4º Lugar = 4 pontos</span><br>
-                                        <span class="badge bg-secondary">5º Lugar = 5 pontos</span><br>
-                                        <span class="badge bg-danger">Sem resultado = 0 ponto</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            }
         </div>
     </div>
 </div>
@@ -232,5 +288,22 @@
             5 => "5º",
             _ => ""
         };
+    }
+
+    public string FormatTimeResult(decimal timeInSeconds)
+    {
+        int minutes = (int)(timeInSeconds / 60);
+        int seconds = (int)(timeInSeconds % 60);
+        return $"{minutes}:{seconds:D2}";
+    }
+
+    public string FormatInteger(decimal number)
+    {
+        return ((int)number).ToString();
+    }
+
+    public string FormatDecimal(decimal number)
+    {
+        return number.ToString("N2", new System.Globalization.CultureInfo("pt-BR"));
     }
 }
