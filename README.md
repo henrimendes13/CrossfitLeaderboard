@@ -1,173 +1,54 @@
 # Crossfit Leaderboard
 
-Sistema de leaderboard para competições de CrossFit com atualização dinâmica em tempo real e persistência em PostgreSQL.
+Aplicação ASP.NET Core para gerenciamento de leaderboard de Crossfit.
 
-## 🎯 **Objetivo**
+## Deploy no Render
 
-Uma única tela onde você pode:
-- ✅ Inserir resultados de cada equipe em cada workout
-- ✅ Ver atualização automática das posições e pontuações
-- ✅ Visualizar o ranking em tempo real
-- ✅ Resetar o leaderboard quando necessário
-- ✅ **Criar quantas equipes quiser**
-- ✅ **Criar quantos workouts quiser**
-- ✅ **Persistência em banco de dados PostgreSQL**
+### Pré-requisitos
+- Conta no GitHub
+- Conta no Render (gratuita)
 
-## 🏗️ **Arquitetura**
+### Passos para Deploy
 
-### Estrutura de Pastas
-```
-CrossfitLeaderboard/
-├── Controllers/          # Controladores MVC
-├── Data/                # DbContext e configurações
-├── Entities/            # Entidades do domínio
-├── Models/              # ViewModels
-├── Services/            # Lógica de negócio
-│   ├── Interfaces/      # Interfaces dos serviços
-│   └── Repositories/    # Repositórios (EF Core)
-├── Views/               # Views Razor
-└── wwwroot/js/         # JavaScript
-```
+1. **Criar repositório no GitHub**
+   - Faça push deste projeto para um repositório no GitHub
 
-### Componentes Principais
+2. **Criar conta no Render**
+   - Acesse [render.com](https://render.com)
+   - Crie uma conta gratuita
 
-#### **1. Entity Framework Core**
-- ✅ **ApplicationDbContext** - Configuração do banco PostgreSQL
-- ✅ **Migrations automáticas** - Criação de tabelas
-- ✅ **Seed data** - Dados iniciais
+3. **Criar novo Web Service**
+   - No dashboard do Render, clique em "New +"
+   - Selecione "Web Service"
+   - Conecte com sua conta do GitHub
+   - Selecione o repositório do projeto
 
-#### **2. Repositórios Entity Framework**
-- ✅ **EntityFrameworkTeamRepository** - CRUD Teams
-- ✅ **EntityFrameworkWorkoutRepository** - CRUD Workouts
-- ✅ **EntityFrameworkWorkoutResultRepository** - CRUD Results
+4. **Configurações do Deploy**
+   - **Name**: crossfit-leaderboard (ou qualquer nome)
+   - **Environment**: .NET
+   - **Build Command**: `dotnet publish -c Release -o out`
+   - **Start Command**: `dotnet CrossfitLeaderboard.dll`
+   - **Plan**: Free
 
-#### **3. Serviços**
-- ✅ **TeamService** - Gerencia equipes
-- ✅ **WorkoutService** - Gerencia workouts
-- ✅ **LeaderboardService** - Orquestra tudo
+5. **Variáveis de Ambiente**
+   - `ASPNETCORE_ENVIRONMENT`: Production
+   - `ASPNETCORE_URLS`: http://0.0.0.0:$PORT
 
-## 🚀 **Funcionalidades**
+6. **Deploy**
+   - Clique em "Create Web Service"
+   - O Render irá automaticamente fazer o build e deploy
 
-### ✅ **Sistema de Pontuação**
-- **1º Lugar** = 1 ponto
-- **2º Lugar** = 2 pontos
-- **3º Lugar** = 3 pontos
-- **Sem resultado** = 0 ponto
-- **Vencedor**: Equipe com menor total de pontos
+### Acesso à Aplicação
+Após o deploy, você receberá uma URL como: `https://crossfit-leaderboard.onrender.com`
 
-### ✅ **Tipos de Workout**
-- **Repetições/Peso**: Maior valor = melhor posição
-- **Tempo**: Menor valor = melhor posição
+### Observações
+- O banco SQLite será criado automaticamente
+- A aplicação usa o plano gratuito do Render (750 horas/mês)
+- Para uso temporário (1 dia), o plano gratuito é suficiente
 
-### ✅ **Atualização Dinâmica**
-- Posições recalculadas automaticamente
-- Pontuações atualizadas em tempo real
-- Ranking reordenado instantaneamente
-
-### ✅ **Persistência de Dados**
-- **PostgreSQL** como banco de dados
-- **Entity Framework Core** para ORM
-- **Migrations automáticas**
-- **Dados persistentes** entre sessões
-
-## 🎮 **Como Usar**
-
-### 1. **Configurar PostgreSQL**
-```bash
-# Instalar PostgreSQL
-# Criar banco de dados
-CREATE DATABASE crossfit_leaderboard;
-```
-
-### 2. **Configurar Aplicação**
-```json
-// appsettings.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=crossfit_leaderboard;Username=postgres;Password=SUA_SENHA"
-  }
-}
-```
-
-### 3. **Executar Aplicação**
-```bash
-dotnet run
-```
-
-A aplicação irá:
-- ✅ Conectar ao PostgreSQL
-- ✅ Criar tabelas automaticamente
-- ✅ Inserir dados de exemplo
-
-### 4. **Usar o Sistema**
-- **Acesse `/`** - Leaderboard principal
-- **Acesse `/Teams`** - Gerenciar equipes
-- **Acesse `/Workouts`** - Gerenciar workouts
-
-## 📱 **Interface**
-
-- **Tabela Responsiva**: Funciona em desktop e mobile
-- **Badges de Posição**: Visualização clara das posições
-- **Cores Dinâmicas**: Destaque para equipes com pontos
-- **Instruções**: Guia visual do sistema de pontuação
-
-## 🔧 **Tecnologias**
-
-- **.NET 8.0** - Backend
-- **ASP.NET Core MVC** - Framework web
-- **Entity Framework Core** - ORM
-- **PostgreSQL** - Banco de dados
-- **Bootstrap 5** - Interface responsiva
-- **jQuery** - Manipulação DOM
-- **AJAX** - Comunicação assíncrona
-
-## 📊 **Estrutura do Banco**
-
-### Tabelas
-- **Teams** - Equipes participantes
-- **Workouts** - Exercícios/competições
-- **WorkoutResults** - Resultados das equipes
-- **Leaderboards** - Agregações (futuro)
-
-### Relacionamentos
-- **Team** ↔ **WorkoutResult** (1:N)
-- **Workout** ↔ **WorkoutResult** (1:N)
-
-## 🚀 **Executar o Projeto**
-
-### 1. **Instalar PostgreSQL**
-```bash
-# Windows: https://www.postgresql.org/download/windows/
-# Linux: sudo apt-get install postgresql
-# macOS: brew install postgresql
-```
-
-### 2. **Configurar Banco**
-```bash
-psql -U postgres -h localhost
-CREATE DATABASE crossfit_leaderboard;
-\q
-```
-
-### 3. **Configurar Aplicação**
-Editar `appsettings.json` com suas credenciais
-
-### 4. **Executar**
-```bash
-dotnet run
-```
-
-Acesse: `https://localhost:7000`
-
-## 📋 **Instruções Detalhadas**
-
-Veja o arquivo `POSTGRESQL_SETUP.md` para instruções completas de configuração do PostgreSQL.
-
-## 🎯 **Próximos Passos (Opcionais)**
-
-Se quiser expandir no futuro:
-- ✅ Múltiplas categorias (Masculino/Feminino)
-- ✅ Autenticação de usuários
-- ✅ API REST para integração
-- ✅ Real-time com SignalR
-- ✅ Relatórios e estatísticas 
+### Estrutura do Projeto
+- **Controllers**: Controladores MVC
+- **Entities**: Modelos de dados
+- **Services**: Lógica de negócio
+- **Views**: Interface do usuário
+- **Data**: Contexto do Entity Framework 
