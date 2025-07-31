@@ -2,11 +2,20 @@ using CrossfitLeaderboard.Data;
 using CrossfitLeaderboard.Services;
 using CrossfitLeaderboard.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configure forwarded headers for AWS
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configure SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -41,7 +50,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// Configure for Docker/Render
+// Configure for AWS
 app.UseForwardedHeaders();
 
 app.UseStaticFiles();

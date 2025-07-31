@@ -157,7 +157,6 @@ ModelManifest.xml
 ehthumbs.db
 Thumbs.db
 
-# Docker
-.dockerignore
-Dockerfile.prod
-docker-compose.override.yml 
+# AWS
+.elasticbeanstalk/
+*.ebextensions.bak 

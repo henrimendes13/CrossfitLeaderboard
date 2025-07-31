@@ -2,49 +2,49 @@
 
 Aplicação ASP.NET Core para gerenciamento de leaderboard de Crossfit.
 
-## Deploy no Render
+## Deploy na AWS
 
 ### Pré-requisitos
 - Conta no GitHub
-- Conta no Render (gratuita)
+- Conta na AWS (com $100 créditos)
 
 ### Passos para Deploy
 
 1. **Criar repositório no GitHub**
    - Faça push deste projeto para um repositório no GitHub
 
-2. **Criar conta no Render**
-   - Acesse [render.com](https://render.com)
-   - Crie uma conta gratuita
+2. **Criar conta na AWS**
+   - Acesse [aws.amazon.com](https://aws.amazon.com)
+   - Crie uma conta com $100 créditos
 
-3. **Criar novo Web Service**
-   - No dashboard do Render, clique em "New +"
-   - Selecione "Web Service"
-   - Conecte com sua conta do GitHub
-   - Selecione o repositório do projeto
+3. **Criar aplicação no Elastic Beanstalk**
+   - No AWS Console, vá para Elastic Beanstalk
+   - Clique em "Create Application"
+   - Selecione seu repositório GitHub
 
 4. **Configurações do Deploy**
-   - **Name**: crossfit-leaderboard (ou qualquer nome)
-   - **Environment**: Docker
-   - **Build Command**: Deixe vazio (Dockerfile cuida disso)
-   - **Start Command**: Deixe vazio (Dockerfile cuida disso)
-   - **Plan**: Free
+   - **Platform**: .NET Core on Linux
+   - **Instance Type**: t2.micro
+   - **Environment**: Single instance
+   - **Branch**: main
 
 5. **Variáveis de Ambiente**
+   - Configuradas automaticamente via .ebextensions
    - `ASPNETCORE_ENVIRONMENT`: Production
    - `ASPNETCORE_URLS`: http://0.0.0.0:8080
 
 6. **Deploy**
-   - Clique em "Create Web Service"
-   - O Render irá automaticamente fazer o build e deploy
+   - Clique em "Create Application"
+   - AWS irá automaticamente fazer o build e deploy
 
 ### Acesso à Aplicação
-Após o deploy, você receberá uma URL como: `https://crossfit-leaderboard.onrender.com`
+Após o deploy, você receberá uma URL como: `https://crossfit-leaderboard.elasticbeanstalk.com`
 
 ### Observações
 - O banco SQLite será criado automaticamente
-- A aplicação usa o plano gratuito do Render (750 horas/mês)
-- Para uso temporário (1 dia), o plano gratuito é suficiente
+- A aplicação usa t2.micro (gratuito com $100 créditos)
+- Sem sleep automático - sempre ativo
+- Dados persistentes entre reinicializações
 
 ### Estrutura do Projeto
 - **Controllers**: Controladores MVC
