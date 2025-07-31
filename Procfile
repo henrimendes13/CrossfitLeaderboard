@@ -1,1 +1,1 @@
-web: dotnet CrossfitLeaderboard.dll 
+web: dotnet CrossfitLeaderboard.dll --urls http://0.0.0.0:8080 --environment Production 
