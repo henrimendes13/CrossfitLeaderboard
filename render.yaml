@@ -1,12 +1,10 @@
 services:
   - type: web
     name: crossfit-leaderboard
-    env: dotnet
+    env: docker
     plan: free
-    buildCommand: dotnet publish -c Release -o out
-    startCommand: dotnet CrossfitLeaderboard.dll
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       - key: ASPNETCORE_URLS
-        value: http://0.0.0.0:$PORT 
+        value: http://0.0.0.0:8080 

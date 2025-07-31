@@ -155,4 +155,9 @@ ModelManifest.xml
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# Docker
+.dockerignore
+Dockerfile.prod
+docker-compose.override.yml 

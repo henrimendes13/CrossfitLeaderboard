@@ -25,14 +25,14 @@ Aplicação ASP.NET Core para gerenciamento de leaderboard de Crossfit.
 
 4. **Configurações do Deploy**
    - **Name**: crossfit-leaderboard (ou qualquer nome)
-   - **Environment**: .NET
-   - **Build Command**: `dotnet publish -c Release -o out`
-   - **Start Command**: `dotnet CrossfitLeaderboard.dll`
+   - **Environment**: Docker
+   - **Build Command**: Deixe vazio (Dockerfile cuida disso)
+   - **Start Command**: Deixe vazio (Dockerfile cuida disso)
    - **Plan**: Free
 
 5. **Variáveis de Ambiente**
    - `ASPNETCORE_ENVIRONMENT`: Production
-   - `ASPNETCORE_URLS`: http://0.0.0.0:$PORT
+   - `ASPNETCORE_URLS`: http://0.0.0.0:8080
 
 6. **Deploy**
    - Clique em "Create Web Service"

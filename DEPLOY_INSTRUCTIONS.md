@@ -37,18 +37,18 @@ git push -u origin main
 
 3. **Configurar o Serviço**
    - **Name**: `crossfit-leaderboard` (ou qualquer nome)
-   - **Environment**: `.NET`
+   - **Environment**: `Docker`
    - **Region**: Escolha a mais próxima (ex: Oregon)
    - **Branch**: `main`
-   - **Build Command**: `dotnet publish -c Release -o out`
-   - **Start Command**: `dotnet CrossfitLeaderboard.dll`
+   - **Build Command**: Deixe vazio (Dockerfile cuida disso)
+   - **Start Command**: Deixe vazio (Dockerfile cuida disso)
    - **Plan**: `Free`
 
 4. **Variáveis de Ambiente**
    - Clique em "Environment"
    - Adicione as seguintes variáveis:
      - `ASPNETCORE_ENVIRONMENT`: `Production`
-     - `ASPNETCORE_URLS`: `http://0.0.0.0:$PORT`
+     - `ASPNETCORE_URLS`: `http://0.0.0.0:8080`
 
 5. **Deploy**
    - Clique em "Create Web Service"

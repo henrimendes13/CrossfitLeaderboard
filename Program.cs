@@ -41,6 +41,9 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+// Configure for Docker/Render
+app.UseForwardedHeaders();
+
 app.UseStaticFiles();
 
 app.UseRouting();
