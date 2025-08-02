@@ -4,27 +4,6 @@
     ViewData["Title"] = "CrossFit Leaderboard";
 }
 
-<!-- Menu Superior -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold">🏆 CrossFit Leaderboard</span>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link active" href="/">
-                <i class="fas fa-home"></i> Home
-            </a>
-            <a class="nav-link" href="/Categories">
-                <i class="fas fa-tags"></i> Categories
-            </a>
-            <a class="nav-link" href="/Teams">
-                <i class="fas fa-users"></i> Teams
-            </a>
-            <a class="nav-link" href="/Workouts">
-                <i class="fas fa-dumbbell"></i> Workouts
-            </a>
-        </div>
-    </div>
-</nav>
-
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
@@ -274,24 +253,39 @@
     {
         return position switch
         {
-            1 => "bg-warning text-dark",
-            2 => "bg-secondary",
-            3 => "bg-warning text-dark",
-            _ => "bg-secondary"
+            1 => "bg-warning text-dark", // Ouro
+            2 => "bg-secondary", // Prata
+            3 => "bg-warning text-dark", // Bronze
+            _ => "bg-light text-dark" // Outras posições
         };
     }
 
     public string GetPositionText(int position)
     {
-        return position switch
+        // Emoji apenas para os 3 primeiros lugares
+        string emoji = position switch
         {
-            1 => "🥇 1º",
-            2 => "🥈 2º",
-            3 => "🥉 3º",
-            4 => "4º",
-            5 => "5º",
+            1 => "🥇",
+            2 => "🥈", 
+            3 => "🥉",
             _ => ""
         };
+        
+        // Formatação do número ordinal em português
+        string ordinal = GetOrdinalSuffix(position);
+        
+        return $"{emoji} {position}{ordinal}".TrimStart();
+    }
+
+    private string GetOrdinalSuffix(int number)
+    {
+        // Lógica para sufixos ordinais em português
+        if (number == 1) return "º";
+        if (number == 2) return "º";
+        if (number == 3) return "º";
+        
+        // Para números maiores que 3, usa "º" para todos
+        return "º";
     }
 
     public string FormatTimeResult(decimal timeInSeconds)

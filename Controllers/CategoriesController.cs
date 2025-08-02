@@ -19,6 +19,7 @@ namespace CrossfitLeaderboard.Controllers
         {
             var categories = await _context.Categories
                 .Include(c => c.Teams)
+                .Include(c => c.WorkoutCategories)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
