@@ -36,7 +36,17 @@ namespace CrossfitLeaderboard.Services
                 document.Add(title);
 
                 // Data e hora da geração
-                Paragraph dateTime = new Paragraph($"Gerado em: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss", new CultureInfo("pt-BR"))}")
+                var brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+                if (brazilTimeZone == null)
+                {
+                    // Fallback para sistemas que não têm o timezone configurado
+                    brazilTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+                }
+
+                var utcNow = DateTime.UtcNow;
+                var brazilTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, brazilTimeZone);
+
+                Paragraph dateTime = new Paragraph($"Gerado em: {brazilTime.ToString("dd/MM/yyyy HH:mm:ss", new CultureInfo("pt-BR"))}")
                     .SetFont(font)
                     .SetFontSize(10)
                     .SetTextAlignment(TextAlignment.CENTER)
